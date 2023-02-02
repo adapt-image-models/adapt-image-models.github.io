@@ -1,1 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+          content="AIM: Adapting Image Models for Efficient Video Understanding">
+    <meta name="author"
+          content="Taojiannan Yang, Yi Zhu, Yusheng Xie, Aston Zhang, Chen Chen, Mu Li">
 
+    <title>AIM: Adapting Image Models for Efficient Video Understanding</title>
+    <!-- Bootstrap core CSS -->
+    <!--link href="bootstrap.min.css" rel="stylesheet"-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="offcanvas.css" rel="stylesheet">
+    <!--    <link rel="icon" href="img/favicon.gif" type="image/gif">-->
+</head>
+
+<body>
+<div class="jumbotron jumbotron-fluid">
+    <div class="container"></div>
+    <h2>AIM: Adapting Image Models for Efficient Video Understanding</h2>
+    <hr>
+    <p class="authors">
+        <a href="https://sites.google.com/view/taojiannanyang/home">Taojiannan Yang<sup>&#9824,&#9827</sup></a>,
+        <a href="https://bryanyzhu.github.io/">Yi Zhu<sup>&#9824</sup></a>,
+        <a href="https://www.amazon.science/author/yusheng-xie">Yusheng Xie<sup>&#9824</sup></a>,
+        <a href="https://www.astonzhang.com/">Aston Zhang<sup>&#9824</sup></a>,
+        <a href="https://www.crcv.ucf.edu/chenchen/">Chen Chen<sup>&#9827</sup></a>,
+        <a href="http://www.cs.cmu.edu/~muli/">Mu Li<sup>&#9824</sup></a>
+    </p>
+    <p class="authors">
+        <sup>&#9824</sup>Amazon Web Services,
+        <sup>&#9827</sup>University of Central Florida
+    </p>
+    <div class="btn-group" role="group" aria-label="Top menu">
+        <a class="btn btn-primary" href="https://adapt-image-models.github.io/">Paper</a>
+        <a class="btn btn-primary" href="https://adapt-image-models.github.io/">Code [available soon]</a>
+    </div>
+</div>
+
+<div class="container">
+    <!-- <div class="section">
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="images/example.png" style="width:80%">
+            </div>
+        </div>
+        <p>
+            Multimodal models are sensitive to image/text perturbations (original image-text pairs are shown in blue boxes, perturbed ones are in red).
+            Image captioning (Top): Adding image perturbations can result in incorrect captions, e.g., the tabby kitten is mistakenly described as a woman/dog. 
+            Text-to-image generation (bottom): Applying text perturbations can result in the generated images containing incomplete visual information, e.g., the tree is missing in the example above.
+        </p>
+    </div> -->
+
+    <div class="section">
+        <h2>Introduction</h2>
+        <hr>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="intro.JPG" style="width:95%">
+            </div>
+        </div>
+        <p>
+            In video understanding, a common practice is bootstrapping from an image pre-trained model
+            and then finetuning on the video data. There are two dominating directions as shown in the left part of the figure above, one is
+            to extend an image model with additional temporal module, the other is to inflate an image model to a video model.
+            However, full finetuning such a video model could be computationally expensive and unnecessary, given that the pre-trained image transformer
+            models have demonstrated exceptional transferability. In this work, we propose a
+            novel method to Adapt pre-trained Image Models (AIM) for efficient video understanding. By freezing the pre-trained image model and adding a few lightweight
+            Adapters, we introduce spatial adaptation, temporal adaptation and joint adaptation to gradually equip an image model with spatiotemporal reasoning capability.
+            We show that our proposed AIM can achieve competitive or even better performance than prior arts with substantially fewer tunable parameters on four video
+            action recognition benchmarks. Thanks to its simplicity, our method is also generally applicable to different image pre-trained models, which has the potential to
+            leverage more powerful image foundation models in the future.
+
+        </p>
+    </div>
+
+    <br>
+
+    <div class="section">
+        <h2>Methodology</h2>
+        <hr>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="method.JPG" style="width:100%">
+            </div>
+        </div>
+        <p>
+            Video understanding requires the model to achieve both good spatial and temporal modeling. We propose Spatial Adaptation for spatial modeling, Temporal Adaptation for
+            Temporal Modeling, and Joint Adaptation to tune the spatiotemporal representations jointly.
+            <br>
+            <b>Spatial Adaptation.</b> Since image pre-trained models have been trained on large-scale datasets and demonstrated strong
+            transferability to downstream tasks, we believe they could achieve good spatial modeling in video
+            action recognition with minimal finetuning. Motivated by this, we add Adapters after the Spatial Attention layer in the pre-trained image model to tune the pre-trained 
+            representations on video data.
+            <br>
+            <b>Temporal Adaptation.</b> Spatial Adaptation helps the frozen image model to learn good spatial representations in video data. But the model still lacks the ability 
+            for temporal modeling. Previous works usually introduce new temporal modules to achieve temporal modeling, but this will introduce sizable number of extra model parameters 
+            and these temporal modules requires training from scratch. To address this problem, we present a new strategy: <b>reuse the pre-trained self-attention layer in
+            the image model to do temporal modeling.</b> As shown in the figure above, we simply reshape the input and use the image pre-trained attention layer to conduct self-attention 
+            on the temporal dimension. Then we add an Adapter after it to tune the extracted features. This simple strategy allows us to achieve good temporal modeling without introducing 
+            new temporal modules.
+            <br>
+            <b>Joint Adaptation.</b> Spatial and Temporal adaptation are performed sequentially to different input dimensions with their
+            individual purposes. It would be desirable to jointly tune the representations for spatiotemporal
+            reasoning. To this end, we further introduce an Adapter in parallel to the MLP layer, which we term
+            as joint adaptation
+            <br>
+            The ablation study to show the effectiveness of each component is shown below
+        </p>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="effectivenessofcomponents.JPG" style="width:100%">
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="section">
+        <h2>Experimental Results</h2>
+        <hr>
+        <p>
+            Though being simple, AIM achieve competitive or even better performance than state-of-the-art full finetuned video models on multiple video benchmarks. The results are shown below.
+
+        </p>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="k400.JPG" style="width:95%">
+            </div>
+        </div>
+        <br>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="ssv2.JPG" style="width:95%">
+            </div>
+        </div>
+        <br>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="k700.JPG" style="width:95%">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Ablation and Discussion</h2>
+        <hr>
+        <p>
+            Thanks to the simplicity, AIM can be easily applied to different network structures. In the table below, we show that AIM can be applied to different pre-trained image data and different 
+            image models. AIM achieves comparable or better performance than the full finetuned video models while tuning much less number of parameters and considerably save training memory and time.
+
+        </p>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="traincost.JPG" style="width:60%">
+            </div>
+        </div>
+        <br>
+        <p>
+            One advantage of our efficient tuning paradigm is that we can keep the well pre-trained image representations intact. In the scenario where downtream data is insufficient, AIM will be less prone to over-fitting problem compared to full finetuning.
+            As shown in the figure below, the advantage of AIM becomes larger when the amount of data becomes less. In the table below, we also show the effect of position of Adapters and the bottoleneck ratio of Adapters. 
+            
+        </p>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="ablation.JPG" style="width:95%">
+            </div>
+        </div>
+        <br>
+        <p>
+            In the figure below, we show the attention map of AIM and other baselines. On the left part, we can see Spatial Adaptation and Temporal Adaptation gradually enhance the attention on the brush painting area. On the right part, we can see that the 
+            Temporal Adaptation helps the model to learn the track of the object, which helps the model to make the correct prediction.
+        </p>
+        <div class="col justify-content-center text-center">
+            <div class="col-sm-12">
+                <img src="visual.JPG" style="width:95%">
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <h2>Bibtex</h2>
+        <hr>
+        <div class="bibtexsection">
+            TBD
+        </div>
+    </div>
+
+    <hr>
+
+    <footer>
+        <p>
+            Acknowledgement: This page is modified from this <a href="https://mmrobustness.github.io/">project webpage</a>.
+        </p>
+    </footer>
+
+
+
+
+    
+
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
+</body>
+</html>
